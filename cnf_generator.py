@@ -79,3 +79,30 @@ if __name__ == "__main__":
     
     # Render DIMACS output
     print(generator.export_dimacs())
+
+def generate_covalent_bond_constraints(self, bond_pairs: list):
+    """
+    Appends boolean logic constraints detailing covalent attachments 
+    between micro-star nodes to dictate structural layout configurations.
+    """
+    for (p1, p2) in bond_pairs:
+        # Generate or fetch unique variable index for the specific covalent bond
+        bond_var = self.get_var_id(f"BOND_{p1}_{p2}")
+        
+        # Rule 1: A shared covalent attachment requires both nodes to remain active
+        p1_unstable = self.get_var_id(f"P{p1}_Unstable")
+        p2_unstable = self.get_var_id(f"P{p2}_Unstable")
+        
+        # Bond implies NOT Unstable_P1 -> (NOT Bond OR NOT Unstable_P1)
+        self.clauses.append(f"-{bond_var} -{p1_unstable} 0")
+        # Bond implies NOT Unstable_P2 -> (NOT Bond OR NOT Unstable_P2)
+        self.clauses.append(f"-{bond_var} -{p2_unstable} 0")
+        
+        # Rule 2: Minimum mass requirement for orbital capture (e.g., mass must be > 1)
+        p1_mass_1 = self.get_var_id(f"P{p1}_M1")
+        p2_mass_1 = self.get_var_id(f"P{p2}_M1")
+        
+        # If mass is 1, it lacks the gravitational pull to maintain a binary bond
+        # P1_M1 implies NOT Bond -> (NOT P1_M1 OR NOT Bond)
+        self.clauses.append(f"-{p1_mass_1} -{bond_var} 0")
+        self.clauses.append(f"-{p2_mass_1} -{bond_var} 0")
